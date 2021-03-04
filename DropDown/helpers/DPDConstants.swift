@@ -26,13 +26,13 @@ internal struct DPDConstant {
 
 		static let TextColor = UIColor.black
         static let SelectedTextColor = UIColor.black
-		static let TextFont = UIFont.systemFont(ofSize: 15)
-		static let BackgroundColor = UIColor(white: 0.94, alpha: 1)
-		static let SelectionBackgroundColor = UIColor(white: 0.89, alpha: 1)
+		static let TextFont = UIFont.systemFont(ofSize: 16)
+		static let BackgroundColor = UIColor(white: 1, alpha: 1)
+		static let SelectionBackgroundColor = #colorLiteral(red: 0.9514868855, green: 0.9698269963, blue: 0.9982582927, alpha: 1)
 		static let SeparatorColor = UIColor.clear
         static let SeparatorInset = UIEdgeInsets.zero
 		static let CornerRadius: CGFloat = 2
-		static let RowHeight: CGFloat = 44
+		static let RowHeight: CGFloat = 67
 		static let HeightPadding: CGFloat = 20
 
 		struct Shadow {

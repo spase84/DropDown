@@ -10,11 +10,27 @@ import UIKit
 
 public typealias Index = Int
 public typealias Closure = () -> Void
-public typealias SelectionClosure = (Index, String) -> Void
-public typealias MultiSelectionClosure = ([Index], [String]) -> Void
-public typealias ConfigurationClosure = (Index, String) -> String
-public typealias CellConfigurationClosure = (Index, String, DropDownCell) -> Void
+public typealias SelectionClosure = (Index, DropDownRow) -> Void
+public typealias MultiSelectionClosure = ([Index], [DropDownRow]) -> Void
+public typealias ConfigurationClosure = (Index, DropDownRow) -> String
+public typealias CellConfigurationClosure = (Index, DropDownRow, DropDownCell) -> Void
 private typealias ComputeLayoutTuple = (x: CGFloat, y: CGFloat, width: CGFloat, offscreenHeight: CGFloat)
+
+public struct DropDownRow {
+	public var id: String
+	public var title: String
+	public var subtitle: String?
+	public var stroked: Bool = false
+
+	public init(id: String, title: String, subtitle: String? = nil, stroked: Bool = false) {
+		self.id = id
+		self.title = title
+		self.subtitle = subtitle
+		self.stroked = stroked
+	}
+}
+
+extension DropDownRow: Equatable {}
 
 /// Can be `UIView` or `UIBarButtonItem`.
 @objc
@@ -394,22 +410,10 @@ public final class DropDown: UIView {
 
 	Changing the data source automatically reloads the drop down.
 	*/
-	public var dataSource = [String]() {
+	public var dataSource = [DropDownRow]() {
 		didSet {
             deselectRows(at: selectedRowIndices)
 			reloadAllComponents()
-		}
-	}
-
-	/**
-	The localization keys for the data source for the drop down.
-
-	Changing this value automatically reloads the drop down.
-	This has uses for setting accibility identifiers on the drop down cells (same ones as the localization keys).
-	*/
-	public var localizationKeysDataSource = [String]() {
-		didSet {
-			dataSource = localizationKeysDataSource.map { NSLocalizedString($0, comment: "") }
 		}
 	}
 
@@ -499,7 +503,7 @@ public final class DropDown: UIView {
 
 	- returns: A new instance of a drop down customized with the above parameters.
 	*/
-	public convenience init(anchorView: AnchorView, selectionAction: SelectionClosure? = nil, dataSource: [String] = [], topOffset: CGPoint? = nil, bottomOffset: CGPoint? = nil, cellConfiguration: ConfigurationClosure? = nil, cancelAction: Closure? = nil) {
+	public convenience init(anchorView: AnchorView, selectionAction: SelectionClosure? = nil, dataSource: [DropDownRow] = [], topOffset: CGPoint? = nil, bottomOffset: CGPoint? = nil, cellConfiguration: ConfigurationClosure? = nil, cancelAction: Closure? = nil) {
 		self.init(frame: .zero)
 
 		self.anchorView = anchorView
@@ -589,9 +593,9 @@ extension DropDown {
 			return
 		}
 
-		xConstraint.constant = layout.x
+		xConstraint.constant = anchorView?.plainView.frame.origin.x ?? layout.x
 		yConstraint.constant = layout.y
-		widthConstraint.constant = layout.width
+		widthConstraint.constant = anchorView?.plainView.frame.width ?? layout.width
 		heightConstraint.constant = layout.visibleHeight
 
 		tableView.isScrollEnabled = layout.offscreenHeight > 0
@@ -1052,7 +1056,7 @@ extension DropDown {
 	}
 
 	/// Returns the selected item.
-	public var selectedItem: String? {
+	public var selectedItem: DropDownRow? {
 		guard let row = (tableView.indexPathForSelectedRow as NSIndexPath?)?.row else { return nil }
 
 		return dataSource[row]
@@ -1099,8 +1103,8 @@ extension DropDown: UITableViewDataSource, UITableViewDelegate {
 	}
 	
 	fileprivate func configureCell(_ cell: DropDownCell, at index: Int) {
-		if index >= 0 && index < localizationKeysDataSource.count {
-			cell.accessibilityIdentifier = localizationKeysDataSource[index]
+		if index >= 0 && index < dataSource.count {
+			cell.accessibilityIdentifier = dataSource[index].title
 		}
 		
 		cell.optionLabel.textColor = textColor
@@ -1112,7 +1116,7 @@ extension DropDown: UITableViewDataSource, UITableViewDelegate {
 		if let cellConfiguration = cellConfiguration {
 			cell.optionLabel.text = cellConfiguration(index, dataSource[index])
 		} else {
-			cell.optionLabel.text = dataSource[index]
+			cell.optionLabel.text = dataSource[index].title
 		}
 		
 		customCellConfiguration?(index, dataSource[index], cell)
